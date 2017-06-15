@@ -1,0 +1,14 @@
+{
+  "name": "cordova-plugin-beeping",
+  "version": "0.1.0",
+  "description": "Cordova plugin for Beeping",
+  "cordova": {
+    "id": "cordova-plugin-beeping",
+    "platforms": [
+      "android"
+    ]
+  },
+
+  "author": "",
+  "license": "MIT"
+}

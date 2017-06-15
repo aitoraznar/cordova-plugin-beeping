@@ -1,0 +1,12 @@
+repositories {
+  flatDir{
+      dirs 'src/android/libs'
+   }
+}
+
+dependencies {
+
+
+    // Add AndroidBeepingCore dependency here!
+    compile project(':AndroidBeepingCore@aar')
+}
