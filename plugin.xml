@@ -20,7 +20,7 @@
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="Beeping">
-                <param name="android-package" value="com.example.plugin.Beeping"/>
+                <param name="android-package" value="by.aitoraznar.cordova.BeepingPlugin"/>
             </feature>
         </config-file>
 
