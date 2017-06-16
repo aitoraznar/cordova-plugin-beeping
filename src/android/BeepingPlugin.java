@@ -1,4 +1,4 @@
-package by.aitoraznar.cordova.beeping;
+package com.aitoraznar.beeping;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -45,6 +45,7 @@ public class BeepingPlugin extends CordovaPlugin implements BeepEventListener {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if ("startBeepingListen".equals(action)) {
             startBeepingListen(callbackContext);
+            return true;
         }
 
         return false;
@@ -70,7 +71,7 @@ public class BeepingPlugin extends CordovaPlugin implements BeepEventListener {
     */
     @Override
     public void onBeepResponseEvent(JSONObject beep) {
-        Log.v(LOG_TAG, "onBeepResponseEvent beep=" + beep.toString());
+        Log.d("APP", "onBeepingEvent: " + beep.toString());
     }
 
 
@@ -89,7 +90,7 @@ public class BeepingPlugin extends CordovaPlugin implements BeepEventListener {
         Context context = getApplicationContext();
 
         Log.v(LOG_TAG, "startBeepingListen - start");
-        beeping = new BeepingCore(appId, context);
+        beeping = new BeepingCore(appId, this);
         Log.v(LOG_TAG, "startBeepingListen - listen");
         beeping.startBeepingListen();
 
