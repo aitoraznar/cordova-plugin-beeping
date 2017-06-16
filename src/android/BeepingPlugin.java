@@ -17,7 +17,8 @@ import com.beeping.AndroidBeepingCore.*;
 
 
 public class BeepingPlugin extends CordovaPlugin implements BeepEventListener {
-    private static final String TAG = "BeepingPlugin";
+    private static final String LOG_TAG = "BeepingPlugin";
+    BeepingCore beeping;
 
     /**
      * Gets the application context from cordova's main activity.
@@ -29,7 +30,15 @@ public class BeepingPlugin extends CordovaPlugin implements BeepEventListener {
 
     @Override
     protected void pluginInitialize() {
-        Log.d(TAG, "Starting Beeping plugin");
+        final Context context = getApplicationContext();
+        final Bundle extras = this.cordova.getActivity().getIntent().getExtras();
+        this.cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                Log.d(LOG_TAG, "Starting Beeping plugin");
+            }
+        });
+
+
     }
 
     @Override
@@ -60,27 +69,43 @@ public class BeepingPlugin extends CordovaPlugin implements BeepEventListener {
     }
     */
     @Override
-    onBeepResponseEvent(JSONObject beep) {
-        Log.v(LOG_TAG, "onBeepResponseEvent beep=" + beep);
-        callbackContext.success();
-        return beep;
+    public void onBeepResponseEvent(JSONObject beep) {
+        Log.v(LOG_TAG, "onBeepResponseEvent beep=" + beep.toString());
     }
 
 
     private String getAppId() {
-		return preferences.getString("APP_ID", "");
+        return "8vLYXZrfqtoWPF6rYBt8KYpeFqeju9SJ";
+		//return preferences.getString("APP_ID", "");
 	}
 
     private void startBeepingListen(CallbackContext callbackContext) {
-          String appId = null;
+        Log.v(LOG_TAG, "startBeepingListen - enter");
+        String appId = "";
 
-          //appId = getAppId();
-          Log.v(LOG_TAG, "execute: appId=" + appId);
+        appId = getAppId();
+        Log.v(LOG_TAG, "execute: appId=" + appId);
 
-          BeepingCore beeping = new BeepingCore("1234567890", this);
-          beeping.startBeepingListen();
+        Context context = getApplicationContext();
 
-          callbackContext.success();
+        Log.v(LOG_TAG, "startBeepingListen - start");
+        beeping = new BeepingCore(appId, context);
+        Log.v(LOG_TAG, "startBeepingListen - listen");
+        beeping.startBeepingListen();
+
+        callbackContext.success();
+    }
+
+    @Override
+    public void onDestroy() {
+
+        super.onDestroy();
+
+        // Stop listening for beeps
+        beeping.stopBeepingListen();
+
+        // Deallocating memory
+        //beeping.dealloc();
     }
 
 }

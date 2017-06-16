@@ -1,43 +1,39 @@
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-           xmlns:android="http://schemas.android.com/apk/res/android"
-           id="cordova-plugin-beeping"
-           version="0.1.0">
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="by.aitoraznar.cordova.beeping"
+        version="0.1.0">
 
-    <name>BeepingPlugin</name>
-    <description>Cordova plugin for Beeping</description>
-    <license>MIT</license>
-    <keywords>cordova</keywords>
-    <repo>https://github.com/aitoraznar/cordova-plugin-beeping</repo>
-    <issue>https://github.com/aitoraznar/cordova-plugin-beeping/issues</issue>
-
-    <js-module src="www/Beeping.js" name="Beeping">
-        <merges target="cordova.plugins.beeping" />
-    </js-module>
+    <name>Beeping</name>
 
     <engines>
-        <engine name="cordova" version=">=5.0.0" />
+        <engine name="cordova" version=">=3.4.0"/>
     </engines>
 
-    <preference name="APP_ID" default="1234567890"/>
+    <asset src="www/Beeping.js" target="js/Beeping.js"/>
+
+    <js-module src="www/Beeping.js" name="beeping">
+        <clobbers target="beeping" />
+    </js-module>
 
     <platform name="android">
+
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="Beeping">
-                <param name="android-package" value="by.aitoraznar.cordova.BeepingPlugin" />
-                <param name="onload" value="true" />
+                <param name="android-package" value="com.example.plugin.Beeping"/>
             </feature>
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
         </config-file>
 
         <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
         <resource-file src="src/android/libs/AndroidBeepingCore.aar" target="src/android/libs/AndroidBeepingCore.aar" />
 
-
-        <source-file src="src/android/BeepingPlugin.java"
-            target-dir="src/by/aitoraznar/cordova/beeping/" />
+        <source-file src="src/android/BeepingPlugin.java" target-dir="by/aitoraznar/cordova/"/>
     </platform>
 
 </plugin>

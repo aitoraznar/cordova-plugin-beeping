@@ -1,5 +1,5 @@
 var exec = require("cordova/exec");
-var PLUGIN_NAME = "FirebaseAnalytics";
+var PLUGIN_NAME = "Beeping";
 
 module.exports = {
     logEvent: function(name, params, success, error) {

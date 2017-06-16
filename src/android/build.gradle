@@ -8,5 +8,5 @@ dependencies {
 
 
     // Add AndroidBeepingCore dependency here!
-    compile project(':AndroidBeepingCore@aar')
+    compile(name:'AndroidBeepingCore', ext:'aar')
 }
