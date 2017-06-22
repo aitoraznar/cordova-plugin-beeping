@@ -71,7 +71,7 @@ public class BeepingPlugin extends CordovaPlugin {
 
             prepareForListenBeeping();
 
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
+            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
             pluginResult.setKeepCallback(true); // Keep callback
             callbackContext.sendPluginResult(pluginResult);
             //callbackContext.success();
@@ -160,7 +160,7 @@ public class BeepingPlugin extends CordovaPlugin {
             if (callbackContext != null) {
 
                 if (debug()) {
-                    Toast.makeText(context, "We received a location update", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "We received a beeping", Toast.LENGTH_SHORT).show();
                 }
 
                 final Bundle b = intent.getExtras();
@@ -191,7 +191,7 @@ public class BeepingPlugin extends CordovaPlugin {
                 });
             } else {
                 if (debug()) {
-                    Toast.makeText(context, "We received a beeping update but locationUpdate was null", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "We received a location update but locationUpdate was null", Toast.LENGTH_SHORT).show();
                 }
                 Log.w(LOG_TAG, "WARNING LOCATION UPDATE CALLBACK IS NULL, PLEASE RUN REGISTER LOCATION UPDATES");
             }
