@@ -3,12 +3,17 @@ package com.aitoraznar.beeping;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.location.Location;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.beeping.AndroidBeepingCore.BeepEventListener;
 import com.beeping.AndroidBeepingCore.BeepingCore;
+import com.flybuy.cordova.location.Constants;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.PluginResult;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -120,6 +125,15 @@ public class BeepingService extends IntentService implements BeepEventListener {
     @Override
     public void onBeepResponseEvent(JSONObject beep) {
         Log.d(LOG_TAG, "onBeepingEvent: " + beep.toString());
+
+        //PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, beep);
+        //locationUpdateCallback.sendPluginResult(pluginResult);
+
+
+        Context context = getApplicationContext();
+        Intent intent = new Intent(context, BeepingPlugin.class);
+        intent.putExtras(createBeepingBundle(beep));
+        getApplicationContext().sendBroadcast(intent);
     }
 
 
@@ -130,14 +144,45 @@ public class BeepingService extends IntentService implements BeepEventListener {
 
     private void startBeepingListen() {
         Log.v(LOG_TAG, "startBeepingListen - enter");
-        String appId = "";
 
-        appId = getAppId();
-        Log.v(LOG_TAG, "execute: appId=" + appId);
+        try {
+            String appId = "";
 
-        Log.v(LOG_TAG, "startBeepingListen - start");
-        beeping = new BeepingCore(appId, this);
-        Log.v(LOG_TAG, "startBeepingListen - listen");
-        beeping.startBeepingListen();
+            appId = getAppId();
+            Log.v(LOG_TAG, "execute: appId=" + appId);
+
+            Log.v(LOG_TAG, "startBeepingListen - start");
+            beeping = new BeepingCore(appId, this);
+            Log.v(LOG_TAG, "startBeepingListen - listen");
+            beeping.startBeepingListen();
+        } catch (Exception e) {
+            // Throw error to cordova
+
+        }
+
+    }
+
+    private Bundle createBeepingBundle(JSONObject beep) {
+        Bundle bundle = new Bundle();
+
+        try {
+            bundle.putString("type", beep.getString("type"));
+            bundle.putString("data", beep.getString("data"));
+            bundle.putString("url", beep.getString("url"));
+            bundle.putString("title", beep.getString("title"));
+            bundle.putString("brand", beep.getString("brand"));
+            bundle.putString("imgSrc", beep.getString("imgSrc"));
+            bundle.putString("ogType", beep.getString("ogType"));
+            bundle.putString("_id", beep.getString("_id"));
+            bundle.putString("avatar", beep.getString("avatar"));
+            bundle.putInt("init", beep.getInt("init"));
+            bundle.putInt("final", beep.getInt("final"));
+            bundle.putString("createdAt", beep.getString("createdAt"));
+            bundle.putString("updatedAt", beep.getString("updatedAt"));
+        } catch(JSONException e) {
+            Log.d(LOG_TAG, "ERROR CREATING createBeepingBundle JSON" + e);
+        }
+
+        return bundle;
     }
 }

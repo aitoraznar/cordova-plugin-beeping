@@ -1,11 +1,14 @@
 package com.aitoraznar.beeping;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -17,22 +20,26 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.Set;
 
 import com.beeping.AndroidBeepingCore.*;
 
 
 public class BeepingPlugin extends CordovaPlugin {
     private static final String LOG_TAG = "BeepingPlugin";
-    protected final static String[] permissions = { Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE };
+    protected final static String[] permissions = {Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     public static final int PERMISSION_DENIED_ERROR = 20;
     public static final int LISTEN_BEEPING = 0;
     //public static final int SAVE_TO_ALBUM_SEC = 1;
 
+    private Intent beepingIntent;
+    private String isDebugging = "true";
     public CallbackContext callbackContext;
 
     /**
      * Gets the application context from cordova's main activity.
+     *
      * @return the application context
      */
     private Context getApplicationContext() {
@@ -60,6 +67,10 @@ public class BeepingPlugin extends CordovaPlugin {
             //startBeepingListen(callbackContext);
 
             prepareForListenBeeping();
+
+            PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
+            pluginResult.setKeepCallback(true); // Keep callback
+            callbackContext.sendPluginResult(pluginResult);
 
             return true;
         }
@@ -121,11 +132,98 @@ public class BeepingPlugin extends CordovaPlugin {
         }
     }
 
+    private BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, final Intent intent) {
+            if (debug()) {
+                Log.d(LOG_TAG, "Location Received, ready for callback");
+            }
+            if (callbackContext != null) {
+
+                if (debug()) {
+                    Toast.makeText(context, "We received a location update", Toast.LENGTH_SHORT).show();
+                }
+
+                final Bundle b = intent.getExtras();
+                final String errorString = b.getString("error");
+
+                cordova.getThreadPool().execute(new Runnable() {
+                    public void run() {
+                        PluginResult pluginResult;
+
+                        if (b == null) {
+                            String unkownError = "An Unkown Error has occurred, there was no Location attached";
+                            pluginResult = new PluginResult(PluginResult.Status.ERROR, unkownError);
+
+                        } else if (errorString != null) {
+                            Log.d(LOG_TAG, "ERROR " + errorString);
+                            pluginResult = new PluginResult(PluginResult.Status.ERROR, errorString);
+
+                        } else {
+                            JSONObject data = bundleToJSON(intent.getExtras());
+                            pluginResult = new PluginResult(PluginResult.Status.OK, data);
+                        }
+
+                        if (pluginResult != null) {
+                            pluginResult.setKeepCallback(true);
+                            callbackContext.sendPluginResult(pluginResult);
+                        }
+                    }
+                });
+            } else {
+                if (debug()) {
+                    Toast.makeText(context, "We received a location update but locationUpdate was null", Toast.LENGTH_SHORT).show();
+                }
+                Log.w(LOG_TAG, "WARNING LOCATION UPDATE CALLBACK IS NULL, PLEASE RUN REGISTER LOCATION UPDATES");
+            }
+        }
+    };
+
     private void startBeepingListenService() {
-        final Context context = getApplicationContext();
-        Intent intent = new Intent(context, BeepingService.class);
-        intent.setAction("startBeepingListen");
-        context.startService(intent);
+        Activity activity = this.cordova.getActivity();
+
+        beepingIntent = new Intent(activity, BeepingService.class);
+        beepingIntent.setAction("startBeepingListen");
+        activity.startService(beepingIntent);
+    }
+
+    private void stopBeepingListenService() {
+        Activity activity = this.cordova.getActivity();
+
+        beepingIntent = new Intent(activity, BeepingService.class);
+        beepingIntent.setAction("startBeepingListen");
+        activity.stopService(beepingIntent);
+    }
+
+    public Boolean debug() {
+        if (Boolean.parseBoolean(isDebugging)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private JSONObject bundleToJSON(Bundle b) {
+        JSONObject data = new JSONObject();
+        try {
+            data.put("type", b.getString("type"));
+            data.put("data", b.getString("data"));
+            data.put("url", b.getString("url"));
+            data.put("title", b.getString("title"));
+            data.put("brand", b.getString("brand"));
+            data.put("imgSrc", b.getString("imgSrc"));
+            data.put("ogType", b.getString("ogType"));
+            data.put("_id", b.getString("_id"));
+            data.put("avatar", b.getString("avatar"));
+            data.put("init", b.getInt("init"));
+            data.put("final", b.getInt("final"));
+            data.put("createdAt", b.getString("createdAt"));
+            data.put("updatedAt", b.getString("updatedAt"));
+        } catch(JSONException e) {
+            Log.d(LOG_TAG, "ERROR CREATING JSON" + e);
+        }
+
+        return data;
     }
 
     @Override
