@@ -3,10 +3,14 @@ package com.aitoraznar.beeping;
 import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,11 +23,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Iterator;
-import java.util.Set;
-
-import com.beeping.AndroidBeepingCore.*;
-
 
 public class BeepingPlugin extends CordovaPlugin {
     private static final String LOG_TAG = "BeepingPlugin";
@@ -31,11 +30,15 @@ public class BeepingPlugin extends CordovaPlugin {
 
     public static final int PERMISSION_DENIED_ERROR = 20;
     public static final int LISTEN_BEEPING = 0;
+    public static String CALLBACK_BEEPING_RECEIVED = "BEEPING_RECEIVED";
     //public static final int SAVE_TO_ALBUM_SEC = 1;
 
     private Intent beepingIntent;
     private String isDebugging = "true";
     public CallbackContext callbackContext;
+    private boolean isServiceBound = false;
+
+
 
     /**
      * Gets the application context from cordova's main activity.
@@ -71,6 +74,7 @@ public class BeepingPlugin extends CordovaPlugin {
             PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
             pluginResult.setKeepCallback(true); // Keep callback
             callbackContext.sendPluginResult(pluginResult);
+            //callbackContext.success();
 
             return true;
         }
@@ -132,7 +136,22 @@ public class BeepingPlugin extends CordovaPlugin {
         }
     }
 
-    private BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver() {
+    // Used to (un)bind the service to with the activity
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            // Nothing to do here
+            Log.i(LOG_TAG, "SERVICE CONNECTED TO MAIN ACTIVITY");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // Nothing to do here
+            Log.i(LOG_TAG, "SERVICE DISCONNECTED");
+        }
+    };
+
+    private BroadcastReceiver beepingUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
             if (debug()) {
@@ -172,7 +191,7 @@ public class BeepingPlugin extends CordovaPlugin {
                 });
             } else {
                 if (debug()) {
-                    Toast.makeText(context, "We received a location update but locationUpdate was null", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "We received a beeping update but locationUpdate was null", Toast.LENGTH_SHORT).show();
                 }
                 Log.w(LOG_TAG, "WARNING LOCATION UPDATE CALLBACK IS NULL, PLEASE RUN REGISTER LOCATION UPDATES");
             }
@@ -184,7 +203,10 @@ public class BeepingPlugin extends CordovaPlugin {
 
         beepingIntent = new Intent(activity, BeepingService.class);
         beepingIntent.setAction("startBeepingListen");
-        activity.startService(beepingIntent);
+        //activity.startService(beepingIntent);
+
+        // Register BroadcastReceiver
+        isServiceBound = bindServiceToWebview(activity, beepingIntent);
     }
 
     private void stopBeepingListenService() {
@@ -192,7 +214,9 @@ public class BeepingPlugin extends CordovaPlugin {
 
         beepingIntent = new Intent(activity, BeepingService.class);
         beepingIntent.setAction("startBeepingListen");
-        activity.stopService(beepingIntent);
+        //activity.stopService(beepingIntent);
+
+        isServiceBound = unbindServiceFromWebview(activity, beepingIntent);
     }
 
     public Boolean debug() {
@@ -201,6 +225,40 @@ public class BeepingPlugin extends CordovaPlugin {
         } else {
             return false;
         }
+    }
+
+    private Boolean bindServiceToWebview(Context context, Intent intent) {
+        Boolean didBind = false;
+
+        try {
+            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+            context.startService(intent);
+
+            webView.getContext().registerReceiver(beepingUpdateReceiver, new IntentFilter(CALLBACK_BEEPING_RECEIVED));
+
+            didBind = true;
+        } catch(Exception e) {
+            Log.e(LOG_TAG, "ERROR BINDING SERVICE" + e);
+        }
+
+        return didBind;
+    }
+
+    private Boolean unbindServiceFromWebview(Context context, Intent intent) {
+        Boolean didUnbind = false;
+
+        try {
+            context.unbindService(serviceConnection);
+            context.stopService(intent);
+
+            webView.getContext().unregisterReceiver(beepingUpdateReceiver);
+
+            didUnbind = true;
+        } catch(Exception e) {
+            Log.e(LOG_TAG, "ERROR UNBINDING SERVICE" + e);
+        }
+
+        return didUnbind;
     }
 
     private JSONObject bundleToJSON(Bundle b) {
@@ -228,11 +286,14 @@ public class BeepingPlugin extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
-
         super.onDestroy();
 
-        // Stop listening for beeps
-        //beeping.stopBeepingListen();
+        Activity activity = this.cordova.getActivity();
+
+        if (isServiceBound) {
+            activity.stopService(beepingIntent);
+            unbindServiceFromWebview(activity, beepingIntent);
+        }
 
         // Deallocating memory
         //beeping.dealloc();

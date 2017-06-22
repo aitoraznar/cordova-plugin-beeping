@@ -41,21 +41,6 @@ public class BeepingService extends IntentService implements BeepEventListener {
     }
 
     /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startBeepingListen(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, BeepingService.class);
-        intent.setAction(ACTION_START_BEEPING_LISTEN);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
      * Starts this service to perform action Baz with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
@@ -75,8 +60,7 @@ public class BeepingService extends IntentService implements BeepEventListener {
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_START_BEEPING_LISTEN.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                //final String param1 = intent.getStringExtra(EXTRA_PARAM1);
                 startBeepingListen();
             } else if (ACTION_BAZ.equals(action)) {
                 final String param1 = intent.getStringExtra(EXTRA_PARAM1);
@@ -126,12 +110,7 @@ public class BeepingService extends IntentService implements BeepEventListener {
     public void onBeepResponseEvent(JSONObject beep) {
         Log.d(LOG_TAG, "onBeepingEvent: " + beep.toString());
 
-        //PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, beep);
-        //locationUpdateCallback.sendPluginResult(pluginResult);
-
-
-        Context context = getApplicationContext();
-        Intent intent = new Intent(context, BeepingPlugin.class);
+        Intent intent = new Intent(BeepingPlugin.CALLBACK_BEEPING_RECEIVED);
         intent.putExtras(createBeepingBundle(beep));
         getApplicationContext().sendBroadcast(intent);
     }
