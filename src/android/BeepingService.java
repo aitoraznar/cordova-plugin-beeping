@@ -30,6 +30,7 @@ public class BeepingService extends IntentService implements BeepEventListener {
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     private static final String ACTION_START_BEEPING_LISTEN = "startBeepingListen";
+    private static final String ACTION_STOP_BEEPING_LISTEN = "stopBeepingListen";
     private static final String ACTION_BAZ = "com.aitoraznar.beeping.action.BAZ";
 
     // TODO: Rename parameters
@@ -40,21 +41,6 @@ public class BeepingService extends IntentService implements BeepEventListener {
         super("BeepingService");
     }
 
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, BeepingService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
@@ -62,30 +48,10 @@ public class BeepingService extends IntentService implements BeepEventListener {
             if (ACTION_START_BEEPING_LISTEN.equals(action)) {
                 //final String param1 = intent.getStringExtra(EXTRA_PARAM1);
                 startBeepingListen();
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
+            } else if (ACTION_STOP_BEEPING_LISTEN.equals(action)) {
+                stopBeepingListen();
             }
         }
-    }
-
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     /**
@@ -136,7 +102,20 @@ public class BeepingService extends IntentService implements BeepEventListener {
             beeping.startBeepingListen();
         } catch (Exception e) {
             // Throw error to cordova
+            Log.v(LOG_TAG, "startBeepingListen - ERROR: " + e.getMessage());
+        }
 
+    }
+
+    private void stopBeepingListen() {
+        Log.v(LOG_TAG, "stopBeepingListen - enter");
+
+        try {
+            Log.v(LOG_TAG, "stopBeepingListen - stop");
+            beeping.stopBeepingListen();
+        } catch (Exception e) {
+            // Throw error to cordova
+            Log.v(LOG_TAG, "stopBeepingListen - ERROR: " + e.getMessage());
         }
 
     }

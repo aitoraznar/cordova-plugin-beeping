@@ -77,6 +77,11 @@ public class BeepingPlugin extends CordovaPlugin {
             //callbackContext.success();
 
             return true;
+        } else if ("stopBeepingListen".equals(action)) {
+            stopBeepingListenService();
+            callbackContext.success();
+
+            return true;
         }
 
         return false;
@@ -212,9 +217,7 @@ public class BeepingPlugin extends CordovaPlugin {
     private void stopBeepingListenService() {
         Activity activity = this.cordova.getActivity();
 
-        beepingIntent = new Intent(activity, BeepingService.class);
-        beepingIntent.setAction("startBeepingListen");
-        //activity.stopService(beepingIntent);
+        beepingIntent.setAction("stopBeepingListen");
 
         isServiceBound = unbindServiceFromWebview(activity, beepingIntent);
     }
